@@ -184,14 +184,16 @@ def voc_ap(rec, prec):
     #     range(start=(len(mpre) - 2), end=0, step=-1)
     # also the python function range excludes the end, resulting in:
     #     range(start=(len(mpre) - 2), end=-1, step=-1)
-    for i in range(len(mpre) - 2, -1, -1):
+    for i in range(
+        len(mpre) - 2, -1, -1
+    ):  # 确保 precison数据从大到小 单调递减 - 从后向前依次找比较甚至替换 - 有点像冒泡
         mpre[i] = max(mpre[i], mpre[i + 1])
     """
      This part creates a list of indexes where the recall changes
         matlab: i=find(mrec(2:end)~=mrec(1:end-1))+1;
     """
     i_list = []
-    for i in range(1, len(mrec)):
+    for i in range(1, len(mrec)):  # 去除 recall 相同的点（保留第一个
         if mrec[i] != mrec[i - 1]:
             i_list.append(i)  # if it was matlab would be i + 1
     """
@@ -201,7 +203,7 @@ def voc_ap(rec, prec):
     """
     ap = 0.0
     for i in i_list:
-        ap += (mrec[i] - mrec[i - 1]) * mpre[i]
+        ap += (mrec[i] - mrec[i - 1]) * mpre[i]  # ap - 面积 当前点的高*当前点到前面点的宽
     return ap, mrec, mpre
 
 
@@ -398,7 +400,7 @@ if len(ground_truth_files_list) == 0:
     error("Error: No ground-truth files found!")
 ground_truth_files_list.sort()
 # dictionary with counter per class
-gt_counter_per_class = {}  # clas 出现的数量
+gt_counter_per_class = {}  # class 出现的数量
 counter_images_per_class = {}  # 多少个文件包含特定的class
 
 gt_files = []
@@ -568,8 +570,8 @@ with open(output_files_path + "/output.txt", "w") as output_file:
          Assign detection-results to ground-truth objects
         """
         nd = len(dr_data)
-        tp = [0] * nd  # creates an array of zeros of size nd
-        fp = [0] * nd
+        tp = [0] * nd  # creates an array of zeros of size nd [GT true, Pred positive
+        fp = [0] * nd  # [GT false, Pred positive
         for idx, detection in enumerate(dr_data):
             file_id = detection["file_id"]
             if show_animation:
@@ -789,11 +791,11 @@ with open(output_files_path + "/output.txt", "w") as output_file:
             tp[idx] += cumsum
             cumsum += val
         # print(tp)
-        rec = tp[:]
+        rec = tp[:]  # recall, 每个检测框 confidence降序的 累计的
         for idx, val in enumerate(tp):
             rec[idx] = float(tp[idx]) / gt_counter_per_class[class_name]
         # print(rec)
-        prec = tp[:]
+        prec = tp[:]  # precision
         for idx, val in enumerate(tp):
             prec[idx] = float(tp[idx]) / (fp[idx] + tp[idx])
         # print(prec)
